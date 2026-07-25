@@ -1,0 +1,100 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+
+# Type checkers
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Ruff
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# JetBrains IDEs
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# SQLite
+*.sqlite3
+*.db
+
+# Alembic (optional generated files)
+alembic/versions/__pycache__/
+
+# Data
+data/raw/
+data/processed/
+data/embeddings/
+
+# Models
+models/
+checkpoints/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker
+*.pid
+
+# Secrets
+*.pem
+*.key
+*.crt
+
+# Cache
+.cache/
+
+# data
+datasets/
+
+.agents/

@@ -1,0 +1,83 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+python-multipart
+
+openai
+
+ipykernel
+
+langchain
+langchain-core
+langchain-community
+langchain-openai
+langchain-text-splitters
+langchain-qdrant
+langchain-huggingface
+
+sentence-transformers
+qdrant-client
+faiss-cpu
+chromadb
+pypdf
+pymupdf
+tiktoken
+numpy
+
+nest-asyncio
+asyncpg
+
+# =========================
+# Database & ORM
+# =========================
+sqlalchemy
+alembic
+
+# =========================
+# Redis (Caching & Rate Limiting)
+# =========================
+redis
+
+# =========================
+# PII Detection & Redaction
+# =========================
+presidio-analyzer
+presidio-anonymizer
+spacy
+
+# Install separately:
+# python -m spacy download en_core_web_sm
+
+# =========================
+# Hybrid Search
+# =========================
+rank-bm25
+scikit-learn
+
+# =========================
+# MCP Server
+# =========================
+mcp
+
+# =========================
+# Utilities
+# =========================
+httpx
+orjson
+python-dateutil
+structlog
+
+# =========================
+# Testing
+# =========================
+pytest
+pytest-asyncio
+
+# =========================
+# Code Quality
+# =========================
+black
+isort
+ruff
