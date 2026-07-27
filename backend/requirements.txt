@@ -85,3 +85,4 @@ ruff
 
 qdrant-client
 fastembed
+onnxruntime-gpu
