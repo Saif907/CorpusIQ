@@ -65,6 +65,7 @@ mcp
 # Utilities
 # =========================
 httpx
+ijson
 orjson
 python-dateutil
 structlog
@@ -81,3 +82,6 @@ pytest-asyncio
 black
 isort
 ruff
+
+qdrant-client
+fastembed

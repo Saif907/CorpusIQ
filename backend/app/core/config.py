@@ -21,7 +21,11 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str | None = None
     GROQ_MODEL: str | None = None
 
- 
+    DATA_DIR: Path = Path(__file__).resolve().parent.parent.parent.parent / "datasets" / "Enron_Email_Dataset"
+    THREADED_EMAILS_FILE: str | None = "threaded_emails.json"
+
+    INGESTION_BATCH_SIZE: int = 100         
+    INGESTION_MAX_WORKERS: int = 4   
 
     ENV: str | None = "development"
     API_PREFIX: str | None = "/api/v1"

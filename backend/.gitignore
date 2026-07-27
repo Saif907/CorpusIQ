@@ -100,3 +100,7 @@ datasets/
 .agents/
 
 tests/
+
+notebooks/
+
+docs/
