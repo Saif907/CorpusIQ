@@ -23,17 +23,17 @@ class CrossEncoderReranker:
         candidates: List[RAGSearchResult], 
         top_n: int = 5
     ) -> List[RAGSearchResult]:
-        """Re-scores candidate hits using joint Query-Document attention on CPU."""
+       
         if not candidates:
             return []
 
-        # Extract text blocks for Cross-Encoder joint scoring
+        
         documents = [c.page_content for c in candidates]
         
-        # Execute TextCrossEncoder reranking
+        
         scores = list(self.reranker.rerank(query=query, documents=documents))
         
-        # Map reranked scores back to candidate objects
+        
         scored_candidates: List[RAGSearchResult] = []
         for candidate, score in zip(candidates, scores):
             scored_candidates.append(
@@ -45,7 +45,6 @@ class CrossEncoderReranker:
                 )
             )
 
-        # Sort descending by Cross-Encoder precision score
         scored_candidates.sort(key=lambda x: x.score, reverse=True)
         reranked_results = scored_candidates[:top_n]
 

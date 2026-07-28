@@ -23,10 +23,10 @@ class ThreadExpander:
         for chunk in top_chunks:
             thread_id = chunk.metadata.get("thread_id")
             thread_position = chunk.metadata.get("thread_position", 0)
-            # If the hit is a reply (position > 0), fetch the root email (position == 0) first
+            
             if thread_position > 0 and thread_id:
                 root_request = RAGQueryRequest(
-                    query="",  # Empty query; metadata filter retrieves the root thread point
+                    query="",  
                     top_k=1,
                     thread_id_filter=thread_id
                 )
