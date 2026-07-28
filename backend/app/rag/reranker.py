@@ -1,3 +1,4 @@
+import math
 import logging
 from typing import List
 from fastembed.rerank.cross_encoder import TextCrossEncoder
@@ -36,9 +37,11 @@ class CrossEncoderReranker:
         
         scored_candidates: List[RAGSearchResult] = []
         for candidate, score in zip(candidates, scores):
+            # Sigmoid normalization: raw logit → 0.0–1.0 confidence
+            normalized_score = 1.0 / (1.0 + math.exp(-float(score)))
             scored_candidates.append(
                 RAGSearchResult(
-                    score=round(float(score), 4),
+                    score=round(normalized_score, 4),
                     chunk_id=candidate.chunk_id,
                     page_content=candidate.page_content,
                     metadata=candidate.metadata
