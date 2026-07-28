@@ -1,80 +1,42 @@
+# =========================
+# Web Framework
+# =========================
 fastapi
 uvicorn[standard]
+
+# =========================
+# Data Validation & Config
+# =========================
 pydantic
 pydantic-settings
 python-dotenv
-python-multipart
 
+# =========================
+# LLM Client
+# =========================
 openai
 
-ipykernel
-
-langchain
-langchain-core
-langchain-community
-langchain-openai
-langchain-text-splitters
-langchain-qdrant
-langchain-huggingface
-
-sentence-transformers
+# =========================
+# Vector Store & Embeddings
+# =========================
 qdrant-client
-faiss-cpu
-chromadb
-pypdf
-pymupdf
-tiktoken
-numpy
-
-nest-asyncio
-asyncpg
+fastembed
+onnxruntime
 
 # =========================
-# Database & ORM
+# Data Streaming
 # =========================
-sqlalchemy
-alembic
-
-# =========================
-# Redis (Caching & Rate Limiting)
-# =========================
-redis
-
-# =========================
-# PII Detection & Redaction
-# =========================
-presidio-analyzer
-presidio-anonymizer
-spacy
-
-# Install separately:
-# python -m spacy download en_core_web_sm
-
-# =========================
-# Hybrid Search
-# =========================
-rank-bm25
-scikit-learn
-
-# =========================
-# MCP Server
-# =========================
-mcp
-
-# =========================
-# Utilities
-# =========================
-httpx
 ijson
-orjson
-python-dateutil
-structlog
+
+# =========================
+# Development & Notebooks
+# =========================
+ipykernel
 
 # =========================
 # Testing
 # =========================
 pytest
-pytest-asyncio
 
 # =========================
 # Code Quality
@@ -82,7 +44,3 @@ pytest-asyncio
 black
 isort
 ruff
-
-qdrant-client
-fastembed
-onnxruntime
