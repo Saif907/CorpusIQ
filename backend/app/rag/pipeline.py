@@ -44,13 +44,14 @@ class RAGPipeline:
         logger.info(f"Chunker generated {len(all_chunks)} RAG chunks from {len(batch)} emails.")
         self.vector_store.ingest_chunks(all_chunks)
 
-    def index_dataset(self, file_path: str, batch_size: int = 50):
+    def index_dataset(self, file_path: str, batch_size: int = 500, max_records: Optional[int] = None):
         """Streams dataset file via Stage 1 Ingestion and indexes it into Qdrant."""
         logger.info(f"Starting end-to-end RAG indexing for file: {file_path}")
         ingest_pipeline = IngestionPipeline(batch_size=batch_size)
         metrics = ingest_pipeline.run(
             file_path=file_path, 
-            batch_callback=self.process_and_index_batch
+            batch_callback=self.process_and_index_batch,
+            max_records=max_records
         )
         logger.info(f"Indexing complete. Indexed {metrics.total_processed} messages into Qdrant.")
         return metrics

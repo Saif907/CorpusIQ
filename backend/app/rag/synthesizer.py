@@ -31,7 +31,7 @@ class RAGSynthesizer:
             self.model_name = model_name or "gpt-4o-mini"
 
     def build_context_text(self, chunks: List[RAGSearchResult]) -> str:
-        """Formats retrieved RAG chunks into a clean, structured context string."""
+      
         if not chunks:
             return "No relevant email documents were retrieved."
 
@@ -98,7 +98,7 @@ class RAGSynthesizer:
             except Exception as err:
                 logger.warning(f"OpenAI Client completion error: {err}")
 
-        # Fallback response if no API key is configured or call fails
+        
         if not answer_text:
             answer_text = (
                 f"Retrieved {len(chunks)} relevant email chunks from CorpusIQ index.\n"

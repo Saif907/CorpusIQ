@@ -30,14 +30,19 @@ def main():
     # Initialize RAG Pipeline
     pipeline = RAGPipeline()
 
-    logger.info(f"Starting memory-bounded streaming indexing into Qdrant (Batch Size: {settings.INGESTION_BATCH_SIZE})...")
+    # Index 10,000 emails with batch size 500 for fast CPU indexing
+    target_limit = 10000
+    batch_size = 500
+
+    logger.info(f"Starting multi-core CPU indexing into Qdrant (Limit: {target_limit} emails, Batch Size: {batch_size})...")
     metrics = pipeline.index_dataset(
         file_path=str(dataset_file_path),
-        batch_size=settings.INGESTION_BATCH_SIZE
+        batch_size=batch_size,
+        max_records=target_limit
     )
 
     print("\n" + "=" * 50)
-    print("      FULL DATASET INDEXING METRICS")
+    print("      DATASET INDEXING METRICS")
     print("=" * 50)
     print(metrics.model_dump_json(indent=2))
     print("=" * 50 + "\n")

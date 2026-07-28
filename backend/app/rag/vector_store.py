@@ -2,6 +2,7 @@ import uuid
 import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance, VectorParams, SparseVectorParams, SparseIndexParams,
@@ -9,52 +10,56 @@ from qdrant_client.models import (
     PayloadSchemaType, Prefetch, FusionQuery, Fusion
 )
 from fastembed import SparseTextEmbedding
+
 from app.schemas.rag_schema import RAGChunk, RAGQueryRequest, RAGSearchResult
 from app.rag.embeddings import BGEMbeddingEngine
-
-
 
 logger = logging.getLogger(__name__)
 
 
 class QdrantVectorStore:
+    """Production-grade local Qdrant Vector Store with Dense (BGE) + Sparse (BM25) RRF Hybrid Search (CPU)."""
 
     def __init__(
         self, 
         collection_name: str = "enron_emails", 
-        storage_path = "storage/qdrant_db",
+        storage_path: str = "storage/qdrant_db",
         embedder: Optional[BGEMbeddingEngine] = None
     ):
-
         self.collection_name = collection_name
         self.storage_path = Path(storage_path)
         self.storage_path.mkdir(parents=True, exist_ok=True)
+        
         self.client = QdrantClient(path=str(self.storage_path))
         self.dense_embedder = embedder or BGEMbeddingEngine()
-        self.sparse_embedder = SparseTextEmbedding(model_name="Qdrant/bm25")
-
+        
+        logger.info("Initializing FastEmbed BM25 sparse model on CPU...")
+        self.sparse_embedder = SparseTextEmbedding(
+            model_name="Qdrant/bm25",
+            providers=["CPUExecutionProvider"]
+        )
+        
         self._ensure_collection()
 
-
     def _ensure_collection(self):
-       
+        """Creates collection with dual vector config (Dense 768-dim + Sparse BM25) and payload indexes."""
         collections = [c.name for c in self.client.get_collections().collections]
         if self.collection_name not in collections:
-            logger.info(f"Creating dual Dense + BM25 Qdrant collection '{self.collection_name}'...")
+            logger.info(f"Creating dual Dense+BM25 Qdrant collection '{self.collection_name}'...")
             self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config={
                     "dense": VectorParams(
-                    size=self.dense_embedder.vector_size, 
-                    distance=Distance.COSINE
+                        size=self.dense_embedder.vector_size, 
+                        distance=Distance.COSINE
                     )
                 },
-
                 sparse_vectors_config={
                     "bm25": SparseVectorParams(index=SparseIndexParams(on_disk=True))
                 }
             )
-           
+
+            # Create Payload Indexes for fast metadata filtering
             indexed_fields = {
                 "thread_id": PayloadSchemaType.KEYWORD,
                 "from_address": PayloadSchemaType.KEYWORD,
@@ -68,22 +73,25 @@ class QdrantVectorStore:
                     field_name=field_name,
                     field_schema=schema_type
                 )
-            logger.info("Successfully configured Qdrant payload field indexes.")
+            logger.info("Configured payload field indexes in Qdrant.")
 
-    
     def ingest_chunks(self, chunks: List[RAGChunk]):
-
+        """Generates Dense (BGE) and Sparse (BM25) vectors and upserts points into Qdrant."""
         if not chunks:
-            return 
-        
+            return
+
         texts_to_embed = [chunk.page_content for chunk in chunks]
+        
+        # 1. Generate Dense Embeddings
         dense_embeddings = self.dense_embedder.embed_texts(texts_to_embed)
+        
+        # 2. Generate Sparse BM25 Embeddings
         sparse_embeddings = list(self.sparse_embedder.embed(texts_to_embed))
 
         points = []
-        for chunk, d_vector, s_vector in zip(chunks,dense_embeddings,sparse_embeddings):
-
+        for chunk, d_vec, s_vec in zip(chunks, dense_embeddings, sparse_embeddings):
             point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk.chunk_id))
+            
             payload = {
                 **chunk.metadata,
                 "chunk_id": chunk.chunk_id,
@@ -94,10 +102,10 @@ class QdrantVectorStore:
                 PointStruct(
                     id=point_id,
                     vector={
-                        "dense": d_vector,
+                        "dense": d_vec,
                         "bm25": SparseVector(
-                            indices=s_vector.indices.tolist(),
-                            values=s_vector.values.tolist()
+                            indices=s_vec.indices.tolist(), 
+                            values=s_vec.values.tolist()
                         )
                     },
                     payload=payload
@@ -105,22 +113,20 @@ class QdrantVectorStore:
             )
 
         self.client.upsert(collection_name=self.collection_name, points=points)
-        logger.info(f"Added {len(points)} Rag chunks into qdrant store.")
+        logger.info(f"Upserted {len(points)} dual-vector RAG chunks into Qdrant store.")
 
-    
     def search(self, request: RAGQueryRequest) -> List[RAGSearchResult]:
-
+        """Executes Hybrid Dense + Sparse BM25 Search with Reciprocal Rank Fusion (RRF)."""
+        # 1. Generate Query Dense & Sparse Vectors
         dense_q = self.dense_embedder.embed_query(request.query)
         sparse_q_obj = list(self.sparse_embedder.embed([request.query]))[0]
-
         sparse_q = SparseVector(
             indices=sparse_q_obj.indices.tolist(), 
             values=sparse_q_obj.values.tolist()
         )
 
-        
+        # 2. Build Metadata Filter conditions
         must_conditions = []
-
         if request.from_address_filter:
             must_conditions.append(
                 FieldCondition(key="from_address", match=MatchValue(value=request.from_address_filter))
@@ -136,10 +142,11 @@ class QdrantVectorStore:
 
         query_filter = Filter(must=must_conditions) if must_conditions else None
 
+        # 3. Execute Qdrant Native Prefetch RRF Hybrid Query
         results = self.client.query_points(
             collection_name=self.collection_name,
             prefetch=[
-                Prefetch(query=dense_q, using="dense", filter=query_filter, limit= request.top_k * 2),
+                Prefetch(query=dense_q, using="dense", filter=query_filter, limit=request.top_k * 2),
                 Prefetch(query=sparse_q, using="bm25", filter=query_filter, limit=request.top_k * 2),
             ],
             query=FusionQuery(fusion=Fusion.RRF),
@@ -156,5 +163,5 @@ class QdrantVectorStore:
                     metadata=hit.payload
                 )
             )
-        
+
         return search_results

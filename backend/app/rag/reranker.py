@@ -7,12 +7,15 @@ logger = logging.getLogger(__name__)
 
 
 class CrossEncoderReranker:
-    """Production-grade local Cross-Encoder Reranker using FastEmbed v0.8.0 TextCrossEncoder."""
+    """Production-grade local Cross-Encoder Reranker using FastEmbed TextCrossEncoder on CPU."""
 
     def __init__(self, model_name: str = "BAAI/bge-reranker-base"):
-        logger.info(f"Loading FastEmbed TextCrossEncoder model: {model_name}")
+        logger.info(f"Loading FastEmbed TextCrossEncoder model '{model_name}' on CPU...")
         self.model_name = model_name
-        self.reranker = TextCrossEncoder(model_name=model_name)
+        self.reranker = TextCrossEncoder(
+            model_name=model_name,
+            providers=["CPUExecutionProvider"]
+        )
 
     def rerank(
         self, 
@@ -20,26 +23,17 @@ class CrossEncoderReranker:
         candidates: List[RAGSearchResult], 
         top_n: int = 5
     ) -> List[RAGSearchResult]:
-        """Re-scores candidate hits using joint Query-Document attention.
-        
-        Args:
-            query: User search question.
-            candidates: Candidate RAGSearchResult objects retrieved from Qdrant.
-            top_n: Number of highest-precision results to return.
-            
-        Returns:
-            List of RAGSearchResult objects sorted by Cross-Encoder relevance score.
-        """
+        """Re-scores candidate hits using joint Query-Document attention on CPU."""
         if not candidates:
             return []
 
         # Extract text blocks for Cross-Encoder joint scoring
         documents = [c.page_content for c in candidates]
         
-        # Execute TextCrossEncoder reranking (yields list of float scores)
+        # Execute TextCrossEncoder reranking
         scores = list(self.reranker.rerank(query=query, documents=documents))
         
-        # Pair candidates with their Cross-Encoder score
+        # Map reranked scores back to candidate objects
         scored_candidates: List[RAGSearchResult] = []
         for candidate, score in zip(candidates, scores):
             scored_candidates.append(
